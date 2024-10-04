@@ -16,9 +16,20 @@ export default function Home() {
             alt="Logo Tarefas"
             src={time_logo}
             priority/>
+          </div>
+
           <h1 className={styles.title}
           >Sistema feito para otimizar o seu tempo! <br /> Focando nos estudos e tarefas. </h1>
-
+        
+          <div>
+            <div className={styles.infoContent}>
+              <section className={styles.box}>
+                <span>+12 posts</span>
+              </section>
+              <section className={styles.box}>
+                <span>+90 comentarios</span>
+              </section>
+            </div>
           </div>
         </main>
       

@@ -2,7 +2,7 @@
 .container{
   background-color: #0f0f0f;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 76px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -28,4 +28,35 @@
   text-align: center;
   margin: 28px;
   line-height: 150%;
+}
+.infoContent{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.box{
+  background-color: #fafafa;
+  padding: 14px 44px;
+  border-radius:  4px;
+  transition: transform 0.4s;
+}
+.box:hover{
+  transform: scale(1.08);
+}
+
+@media screen and (max-width: 580px){
+  .hero{
+    max-width: 80%;
+  }
+  .title{
+    font-size: 24px;
+  }
+  .infoContent{
+    flex-direction: column;
+  }
+  .box{
+    width: 80%;
+    margin-bottom: 14px;
+    text-align: center;
+  }
 }
