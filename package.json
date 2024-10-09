@@ -14,6 +14,7 @@
     "proj_tarefas": "file:",
     "react": "^18",
     "react-dom": "^18",
+    "react-icons": "^5.3.0",
     "sass": "^1.79.4"
   },
   "devDependencies": {
