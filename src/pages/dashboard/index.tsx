@@ -8,7 +8,10 @@ import { Textarea } from '../../components/textarea';
 import { FiShare2} from 'react-icons/fi';
 import { FaTrash } from 'react-icons/fa';
 import { bd } from '../services/firebaseConnection';
-import { addDoc, collection, query, orderBy, where, onSnapshot } from 'firebase/firestore';
+import { addDoc, collection, query, orderBy, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
+import Link from 'next/link';
+import { now } from 'next-auth/client/_utils';
+import { isDate } from 'util/types';
 
 
 
@@ -53,6 +56,15 @@ export default function Dashboard({ user }: HomeProps){
                         public: doc.data().public
                     })
                 })
+                console.log(listas);
+                if (listas.length < 1){
+                    let dataAtual = new Date();
+                    listas.push({id: "tarefavazia",
+                        tarefas: "Nenhuma tarefa foi localizada.",
+                        created: dataAtual,
+                        user: "computer",
+                        public: false})
+                }
                 setTask(listas);
             });
         }
@@ -63,6 +75,18 @@ export default function Dashboard({ user }: HomeProps){
     function handleChangePublic (event: ChangeEvent<HTMLInputElement>){
         console.log(event.target.checked);
         setPublicTask(event.target.checked)
+    }
+
+    async function handleShare(id:string){
+        await navigator.clipboard.writeText(
+            `${process.env.NEXT_PUBLIC_URL}/task/${id}`
+        )
+        alert('URL foi copiada com sucesso!')
+    }
+
+    async function handleDeleteTask (id:string) {
+        const docRef = doc(bd,"tarefas", id)
+        await deleteDoc(docRef);
     }
 
     async function handlerRegisterTask(event: FormEvent){
@@ -122,19 +146,30 @@ export default function Dashboard({ user }: HomeProps){
                 <section className={styles.taskContainer}>
                     <h1>Minhas tarefas</h1>
                     
-                    {task.map((item)=>(                        
+
+                    {task.map((item)=>(            
+                                
                         <article key={item.id} className={styles.task}>
+                            
                             {item.public &&(
                                 <div className={styles.tagContainer}>
                                     <label className={styles.tag}>PUBLICO</label>
-                                    <button className={styles.shareButton}>
+                                    <button className={styles.shareButton}
+                                    onClick={()=> handleShare(item.id)}>
+                                        
                                         <FiShare2 size={22} color='#3183ff'/>
                                     </button>
                                 </div>
                             )}
                             <div className={styles.taskContent}>
-                                <p>{item.tarefas}</p>
-                                <button className={styles.trash}>
+                                {item.public? (
+                                    <Link href={`/task/${item.id}`}>
+                                        <p>{item.tarefas}</p>
+                                    </Link>
+                                ) :(
+                                    <p>{item.tarefas}</p>
+                                )}
+                                <button className={styles.trash} onClick={()=> handleDeleteTask(item.id)}>
                                     <FaTrash size={24} color='#ea3140'/>
                                 </button>
                             </div>
