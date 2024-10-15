@@ -169,8 +169,8 @@ export default function Dashboard({ user }: HomeProps){
                                 ) :(
                                     <p>{item.tarefas}</p>
                                 )}
-                                <button className={styles.trash} onClick={()=> handleDeleteTask(item.id)}>
-                                    <FaTrash size={24} color='#ea3140'/>
+                                <button className={styles.trash} disabled={item?.id === "tarefavazia"} onClick={()=> handleDeleteTask(item.id)}>
+                                    <FaTrash size={24} />
                                 </button>
                             </div>
                         </article>

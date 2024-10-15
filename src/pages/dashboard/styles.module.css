@@ -117,5 +117,10 @@
   background: transparent;
   border: 0;
   margin: 0 8px;
+  color: #ea3140;
 }
 
+.trash:disabled{
+  cursor: default;
+  color: transparent;
+}
