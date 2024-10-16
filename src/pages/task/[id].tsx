@@ -11,7 +11,8 @@ import{
     where,
     getDoc,
     addDoc,
-    getDocs
+    getDocs,
+    deleteDoc
 } from "firebase/firestore";
 import { Textarea } from "@/components/textarea";
 import { FaTrash, FaExclamationTriangle} from "react-icons/fa";
@@ -23,8 +24,11 @@ interface taskProps{
         public: boolean,
         user: string,
         taskId: string,
+        denunciante: string,
+        idComment: string,
     }
     allComments: commentsProps[]
+    allDenuncias: commentsProps[]
 }
 
 interface commentsProps{
@@ -33,14 +37,16 @@ interface commentsProps{
     name: string;
     taskId: string;
     user: string;
+    denunciante: string;
+    idComment: string;
 }
 
-export default function Task({item, allComments}: taskProps){
+export default function Task({item, allComments, allDenuncias}: taskProps){
 
     const {data: session} = useSession();
     const [input, setInput] = useState("");
     const [comments, setComments] = useState<commentsProps[]>(allComments||[])
-    
+    const [denuncia, setDenuncia] = useState<commentsProps[]>(allDenuncias || [])
 
     async function handleComments(event: FormEvent) {
         event.preventDefault();
@@ -54,7 +60,6 @@ export default function Task({item, allComments}: taskProps){
                 user: session?.user?.email,
                 name: session?.user?.name,
                 taskId: item?.taskId,
-                taskUser: item?.user,
             });
 
             const data ={
@@ -71,6 +76,66 @@ export default function Task({item, allComments}: taskProps){
             console.log(err);
         }
 
+    }
+
+    async function handleDenunciaComentario(  denuncia : commentsProps) {
+        try{
+            const docRef = doc(bd, "comments", denuncia.id)
+
+            if(session?.user?.email === item.user){
+                handleDeleteComments(denuncia.id);
+            }
+            else{
+                const comments = await addDoc(collection(bd, "denuncia"),{
+                    comment: denuncia.comment,
+                    user: denuncia.user,
+                    name: denuncia.name,
+                    taskId: denuncia.taskId,
+                    denunciante: session?.user?.email,
+                    idComment: denuncia.id,
+                })
+                return alert("denunciado")
+            }
+
+        }catch(err){
+            console.log(err)
+        }        
+    }
+
+    async function handleDeleteDenuncias(id:string, idComment?: string) {
+        try {            
+            const docRefDenuncia = doc(bd, "denuncia",id)
+            await deleteDoc(docRefDenuncia);
+            const deleteDenuncia = denuncia.filter((i)=> i.id !== id);
+            
+            if (idComment) {
+                handleDeleteComments(idComment);
+            }
+            setDenuncia(deleteDenuncia);
+            
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async function handleDeleteComments(id:string) {
+        try{               
+                 
+                const docRef = doc(bd, "comments", id)
+                await deleteDoc(docRef);                
+                const deleteComments = comments.filter((i)=> i.id !== id)
+                
+                setComments(deleteComments);
+
+                denuncia.forEach((i)=>{
+                    if(i.idComment === id){
+                        console.log(i.id + " <- este é o ID")
+                        handleDeleteDenuncias(i.id);
+                    }
+                })
+            
+        }catch(err){
+            console.log(err);
+        }
     }
 
     return(
@@ -110,13 +175,18 @@ export default function Task({item, allComments}: taskProps){
                             <div className={styles.icons}>
 
                                 {i.user === session?.user?.email && (
-                                    <button className={styles.trash}> 
-                                        <FaTrash title="Excluir" color="#ea3140" fontSize={18}/>
+                                    <button 
+                                     className={styles.trash}
+                                     title="Excluir" 
+                                     onClick={ ()=> handleDeleteComments(i.id)}> 
+                                        <FaTrash color="#ea3140" fontSize={18}/>
                                     </button>
                                 )
                                 }
-                                <button className={styles.trash} title="Denunciar"> 
-                                        <FaExclamationTriangle color="#ea2" fontSize={18}/>
+                                <button className={styles.trash} title="Denunciar"
+                                disabled ={!session?.user}
+                                onClick={()=> handleDenunciaComentario(i)}> 
+                                        <FaExclamationTriangle  fontSize={18}/>
                                     </button>
                             </div>
                             
@@ -124,11 +194,34 @@ export default function Task({item, allComments}: taskProps){
                         <p>{i.comment}</p>
                     </article>
                 ))}
-            </section>     
+            </section>
+            {session?.user?.email === item.user &&(               
+                <section className={styles.commentsContainer}>
+                {denuncia.length > 1 &&(
+                        <h1> Comentarios com Denuncia</h1>
+                    )}
+                {denuncia.map((i)=>(
+                    <article key={i.id} className={styles.denunciaComments}>
+                        <div className={styles.headComment}>
+                            <label className={styles.commentsLabel}> {i.name}</label>
+                            {item.user === session?.user?.email && (
+                                        <button 
+                                        className={styles.trash}
+                                        title="Excluir" 
+                                        onClick={ ()=> handleDeleteDenuncias(i.id, i.idComment = i.idComment )}> 
+                                            <FaTrash color="#ea3140" fontSize={18}/>
+                                        </button>
+                                )
+                            }
+                        </div>
+                        <p>{i.comment}</p>
+                    </article>    
+                ))}
+                </section>     
+            )}
         </div>
     )
-}
-
+} 
 export const getServerSideProps: GetServerSideProps = async ({params}) =>{
     const id = params?.id as string;
 
@@ -136,7 +229,25 @@ export const getServerSideProps: GetServerSideProps = async ({params}) =>{
     const q = query(collection(bd, "comments"), where("taskId", "==", id))
     const snapshotComments = await getDocs(q)
 
+    const denuncia = query(collection(bd, "denuncia"), where("taskId", "==", id))
+    
+    const snapDenuncia = await getDocs(denuncia)
+    
     let allComments : commentsProps[] = [];
+    let allDenuncias : commentsProps[] = [];
+
+    snapDenuncia.forEach((doc)=>{
+        allDenuncias.push({
+            id: doc.id,
+            comment: doc.data().comment,
+            user: doc.data().user,
+            name: doc.data().name,
+            taskId: doc.data().taskId,
+            denunciante: doc.data().denunciante,
+            idComment: doc.data().idComment,
+
+        })
+    })
 
     snapshotComments.forEach((doc)=>{
         allComments.push({
@@ -145,10 +256,10 @@ export const getServerSideProps: GetServerSideProps = async ({params}) =>{
             user: doc.data().user,
             name: doc.data().name,
             taskId: doc.data().taskId,
+            denunciante: "",
+            idComment: doc.id,
         })
     })
-
-    console.log(allComments);
 
     const snapshot = await getDoc(docRef)
 
@@ -169,11 +280,11 @@ export const getServerSideProps: GetServerSideProps = async ({params}) =>{
         user: snapshot.data()?.user,
         taskId: id,
     }
-
     return{
         props: {
             item: task,
             allComments: allComments,
+            allDenuncias: allDenuncias,
         }
     }
 }
