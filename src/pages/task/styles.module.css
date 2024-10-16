@@ -57,3 +57,42 @@
     cursor: not-allowed;
     background-color: #3183ff86;
 }
+
+.comment {
+  border: 1px solid #ddd;
+  padding: 14px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+
+.headComment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.icons {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.icons button{
+  padding-left: 4px;
+}
+
+.commentsLabel {
+  background-color: #ccc;
+  padding: 4px 8px;
+  margin-right: 8px;
+  border-radius: 4px;
+}
+
+.trash {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.comment p{
+  margin-top: 14px;
+  white-space: pre-wrap;
+}

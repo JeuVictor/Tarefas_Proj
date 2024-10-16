@@ -10,9 +10,11 @@ import{
     query,
     where,
     getDoc,
-    addDoc
+    addDoc,
+    getDocs
 } from "firebase/firestore";
 import { Textarea } from "@/components/textarea";
+import { FaTrash, FaExclamationTriangle} from "react-icons/fa";
 
 interface taskProps{
     item:{
@@ -22,12 +24,23 @@ interface taskProps{
         user: string,
         taskId: string,
     }
+    allComments: commentsProps[]
 }
 
-export default function Task({item}: taskProps){
+interface commentsProps{
+    id: string;
+    comment: string;
+    name: string;
+    taskId: string;
+    user: string;
+}
+
+export default function Task({item, allComments}: taskProps){
 
     const {data: session} = useSession();
     const [input, setInput] = useState("");
+    const [comments, setComments] = useState<commentsProps[]>(allComments||[])
+    
 
     async function handleComments(event: FormEvent) {
         event.preventDefault();
@@ -35,14 +48,24 @@ export default function Task({item}: taskProps){
         if(input === "" || !session?.user?.email || !session?.user?.name) return;
 
         try{
-            const docRef = await addDoc(collection(bd, "commets"),{
-                commet: input,
+            const docRef = await addDoc(collection(bd, "comments"),{
+                comment: input,
                 created: new Date(),
                 user: session?.user?.email,
                 name: session?.user?.name,
                 taskId: item?.taskId,
+                taskUser: item?.user,
             });
 
+            const data ={
+                id: docRef.id,
+                comment: input,
+                user: session?.user?.email,
+                name: session?.user?.name,
+                taskId: item?.taskId
+            };
+
+            setComments((old)=>[...old, data])
             setInput("");
         }catch(err){
             console.log(err);
@@ -74,7 +97,34 @@ export default function Task({item}: taskProps){
                     <button className={styles.button} disabled={!session?.user}>Enviar comentário</button>
                 </form>
             </section>
+            <section className={styles.commentsContainer}>
+                <h2>Todos os comentários</h2>
+                {comments.length === 0 &&( 
+                    <span> Nenhum comentário foi encontrado...</span>
+                )}
 
+                {comments.map((i)=>(
+                    <article key={i.id} className={styles.comment}>
+                        <div className={styles.headComment}>
+                            <label className={styles.commentsLabel}> {i.name} </label>
+                            <div className={styles.icons}>
+
+                                {i.user === session?.user?.email && (
+                                    <button className={styles.trash}> 
+                                        <FaTrash title="Excluir" color="#ea3140" fontSize={18}/>
+                                    </button>
+                                )
+                                }
+                                <button className={styles.trash} title="Denunciar"> 
+                                        <FaExclamationTriangle color="#ea2" fontSize={18}/>
+                                    </button>
+                            </div>
+                            
+                        </div>
+                        <p>{i.comment}</p>
+                    </article>
+                ))}
+            </section>     
         </div>
     )
 }
@@ -83,6 +133,23 @@ export const getServerSideProps: GetServerSideProps = async ({params}) =>{
     const id = params?.id as string;
 
     const docRef = doc(bd, "tarefas", id)
+    const q = query(collection(bd, "comments"), where("taskId", "==", id))
+    const snapshotComments = await getDocs(q)
+
+    let allComments : commentsProps[] = [];
+
+    snapshotComments.forEach((doc)=>{
+        allComments.push({
+            id: doc.id,
+            comment: doc.data().comment,
+            user: doc.data().user,
+            name: doc.data().name,
+            taskId: doc.data().taskId,
+        })
+    })
+
+    console.log(allComments);
+
     const snapshot = await getDoc(docRef)
 
     if(snapshot.data() === undefined || !snapshot.data()?.public){
@@ -106,6 +173,7 @@ export const getServerSideProps: GetServerSideProps = async ({params}) =>{
     return{
         props: {
             item: task,
+            allComments: allComments,
         }
     }
 }
