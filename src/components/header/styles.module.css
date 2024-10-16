@@ -28,7 +28,7 @@
     padding-left: 2px;
 }
 
-.loginButton {
+.loginButtonLogado, .loginButton {
   background-color: transparent;
     padding: 8px 32px;
     border-radius: 24px;
@@ -37,11 +37,18 @@
     cursor: pointer;
     transform: all 0.4s;
 }
-.loginButton:hover{
+
+.loginButtonLogado:hover, .loginButton:hover{
     transform: scale(1.08);
     background-color: #fff;
-    color: #0f0f0f;
     font-weight: bold;
+}
+.loginButton:hover{
+  color: #0f0f0f;
+}
+.loginButtonLogado:hover::after{
+  color: #0f0f0f;
+  content: "Sair";
 }
 .nav{
     display: flex;

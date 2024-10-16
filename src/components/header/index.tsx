@@ -3,9 +3,12 @@ import styles from "./styles.module.css";
 import Link from "next/link";
 import React from 'react';
 
+
 export function Header(){
 
+    
     const {data: session, status} = useSession();
+    
 
     return(
         <header className={styles.header}>
@@ -16,7 +19,8 @@ export function Header(){
                     </Link>
                     {
                         session?.user && (
-                            <Link href="/dashboard" className={styles.link} >Meu painel</Link>)
+                            <Link href="/dashboard" className={styles.link} >Meu painel</Link>    
+                        )
                     }
                 </nav>
                 
@@ -24,7 +28,7 @@ export function Header(){
                     status === "loading" ? (
                     <></>
                 ) : session ?(
-                    <button className={styles.loginButton} onClick={()=> signOut()} >
+                    <button title='Click para sair' className={styles.loginButtonLogado} onClick={()=> signOut()} >
                         Olá, {session?.user?.name}.
                     </button>):(
                     <button className={styles.loginButton} onClick={()=> signIn("google")} >

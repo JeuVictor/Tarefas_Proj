@@ -67,7 +67,9 @@ export default function Task({item, allComments, allDenuncias}: taskProps){
                 comment: input,
                 user: session?.user?.email,
                 name: session?.user?.name,
-                taskId: item?.taskId
+                taskId: item?.taskId,
+                denunciante:"" ,
+                idComment: docRef.id ,
             };
 
             setComments((old)=>[...old, data])

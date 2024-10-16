@@ -43,6 +43,17 @@
 .box:hover{
   transform: scale(1.08);
 }
+.boxDenuncia{
+  color: #fafafa;
+  transition: transform 0.4s;
+}
+.boxDenuncia:hover{
+  transform: scale(1.08);
+  color: yellow;
+}
+.denuncias{
+  position: absolute;
+}
 
 @media screen and (max-width: 580px){
   .hero{
